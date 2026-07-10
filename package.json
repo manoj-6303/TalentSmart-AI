@@ -1,0 +1,10 @@
+{
+  "name": "hiresmart-root",
+  "version": "1.0.0",
+  "description": "HireSmart: AI-Powered Intelligent Recruitment Dashboard Root Package",
+  "type": "module",
+  "scripts": {
+    "dev": "node dev.js",
+    "test": "node backend/test_services.js"
+  }
+}

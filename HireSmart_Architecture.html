@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HireSmart Architecture Workflow</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#f8fafc',
+                primaryTextColor: '#0f172a',
+                primaryBorderColor: '#cbd5e1',
+                lineColor: '#64748b',
+                secondaryColor: '#f1f5f9',
+                tertiaryColor: '#e2e8f0'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #4f46e5, #38bdf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .header p {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+        .diagram-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 2rem;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+        }
+        /* Custom styles for Mermaid to look 3D and modern */
+        .node rect, .node circle, .node polygon {
+            stroke-width: 2px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            transition: all 0.3s ease;
+        }
+        .node:hover rect, .node:hover circle, .node:hover polygon {
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
+            transform: translateY(-2px);
+        }
+        .cluster rect {
+            fill: #f8fafc !important;
+            stroke: #e2e8f0 !important;
+            stroke-width: 2px !important;
+            rx: 12px !important;
+            ry: 12px !important;
+        }
+        .cluster-label {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HireSmart Platform Workflow</h1>
+            <p>End-to-end Architecture & AI Data Pipeline</p>
+        </div>
+        
+        <div class="diagram-container">
+            <div class="mermaid">
+                graph TD
+                    %% Styles
+                    classDef default fill:#fff,stroke:#cbd5e1,stroke-width:2px,rx:8px,ry:8px,color:#0f172a;
+                    classDef ui fill:#3b82f6,stroke:#2563eb,stroke-width:2px,color:#fff,rx:8px,ry:8px;
+                    classDef action fill:#0ea5e9,stroke:#0284c7,stroke-width:2px,color:#fff,rx:8px,ry:8px;
+                    classDef ai fill:#8b5cf6,stroke:#7c3aed,stroke-width:2px,color:#fff,rx:8px,ry:8px;
+                    classDef db fill:#10b981,stroke:#059669,stroke-width:2px,color:#fff,rx:8px,ry:8px;
+                    classDef logic fill:#f59e0b,stroke:#d97706,stroke-width:2px,color:#fff,rx:8px,ry:8px;
+                    classDef api fill:#ec4899,stroke:#db2777,stroke-width:2px,color:#fff,rx:8px,ry:8px;
+
+                    subgraph Frontend_React_Vite
+                        Start["User Browser"]:::ui --> Login["Login Page - React Context Auth"]:::ui
+                        Login --> Dashboard["Recruiter Dashboard"]:::ui
+                        Dashboard --> JD_Upload["Upload Job Description"]:::action
+                        Dashboard --> Resume_Upload["Upload Candidate Resumes"]:::action
+                        Dashboard --> Talent_Dir["View Talent Directory"]:::ui
+                        Dashboard --> Analytics["View AI Insights"]:::ui
+                    end
+
+                    subgraph Backend_Server_NodeJS_Express
+                        JD_Upload --> API_JD["POST /api/jd"]:::api
+                        Resume_Upload --> API_Upload["POST /api/candidates/upload"]:::api
+                        Talent_Dir --> API_List["GET /api/candidates"]:::api
+                        Analytics --> API_RAG["POST /api/candidates/analyze"]:::api
+                        
+                        API_Upload --> Multer["Multer Middleware Memory Buffer"]:::logic
+                        Multer --> ParserRoute["Extraction Controller"]:::logic
+                    end
+
+                    subgraph Document_Processing
+                        ParserRoute --> PDF_Parse["PDF-Parse Engine Extract Text"]:::logic
+                        ParserRoute --> Mammoth["Mammoth XML Extract Text"]:::logic
+                        PDF_Parse --> RawText["Raw String Buffer"]:::logic
+                        Mammoth --> RawText
+                    end
+
+                    subgraph Gemini_AI_API_Layer
+                        RawText --> Gemini_Prompt["Construct LLM Prompt Template"]:::logic
+                        Gemini_Prompt --> Gemini_Extract["Gemini 1.5 Flash API"]:::ai
+                        
+                        Gemini_Extract -->|JSON Response| ParsedFields["Extracted Fields"]:::logic
+                        ParsedFields --> Field_Name["Name, Email, Phone"]
+                        ParsedFields --> Field_Edu["Education, CGPA, University"]
+                        ParsedFields --> Field_Exp["Experience, Notice Period"]
+                        ParsedFields --> Field_Skills["Technical, Soft Skills"]
+                        ParsedFields --> Field_Comm["Communication Insights"]
+                        
+                        ParsedFields --> Insight_Prompt["AI Insight Prompt"]:::logic
+                        Insight_Prompt --> Gemini_Insight["Gemini API - Generate Insights"]:::ai
+                        Gemini_Insight --> Insight_Data["Strengths, Weaknesses, Readiness"]:::logic
+                    end
+                    
+                    subgraph Database_Storage_MongoDB
+                        ParsedFields --> Mongo_Save["Mongoose ORM Save"]:::db
+                        Insight_Data --> Mongo_Save
+                        Mongo_Save --> MongoDB[("MongoDB Atlas Document Store")]:::db
+                    end
+
+                    subgraph Vector_Embedding_Pipeline
+                        RawText --> Chunking["Text Chunking & Preprocessing"]:::logic
+                        Chunking --> Gemini_Embed["Gemini text-embedding-004 API"]:::ai
+                        Gemini_Embed -->|768 Dimensions| Vector_Data["Vector Array"]:::logic
+                        
+                        Vector_Data --> Pinecone_Upsert["Pinecone SDK Upsert"]:::db
+                        Pinecone_Upsert --> Pinecone[("Pinecone Vector Index")]:::db
+                    end
+                    
+                    subgraph RAG_Engine_Retrieval_Augmented_Generation
+                        API_RAG --> JD_Embed["Embed Job Description Text"]:::ai
+                        JD_Embed --> Vector_Query["Query Pinecone Index"]:::db
+                        Pinecone --> Vector_Query
+                        Vector_Query --> TopK["Retrieve Top Matching Candidates"]:::logic
+                        
+                        TopK --> Context_Merge["Merge JD + Candidate Data"]:::logic
+                        MongoDB --> Context_Merge
+                        Context_Merge --> RAG_Prompt["RAG Prompt Construction"]:::logic
+                        RAG_Prompt --> Gemini_RAG["Gemini API Fit Analysis"]:::ai
+                        
+                        Gemini_RAG --> MatchScore["Match Percentage"]:::ui
+                        Gemini_RAG --> MissingSkills["Missing Skills"]:::ui
+                        Gemini_RAG --> Questions["Custom Interview Questions"]:::ui
+                    end
+
+                    API_List --> MongoDB
+                    MongoDB --> Talent_Dir
+                    MatchScore --> Analytics
+                    MissingSkills --> Analytics
+                    Questions --> Analytics
+            </div>
+        </div>
+    </div>
+</body>
+</html>

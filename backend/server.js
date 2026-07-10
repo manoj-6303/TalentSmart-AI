@@ -6,6 +6,11 @@ import candidateRouter from './routes/candidates.js';
 import jobRouter from './routes/jobs.js';
 import analysisRouter from './routes/analysis.js';
 import authRouter from './routes/auth.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environmental variables
 dotenv.config();
@@ -68,9 +73,17 @@ app.use('/api/jobs', jobRouter);
 app.use('/api/analysis', analysisRouter);
 app.use('/api/auth', authRouter);
 
-// Basic Health Check Route
-app.get('/', (req, res) => {
+// Basic Health Check Route (API)
+app.get('/api/health', (req, res) => {
   res.json({ name: 'HireSmart AI API', status: 'healthy', version: '1.0.0' });
+});
+
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Catch-all route to serve index.html for React Router
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
 });
 
 // Global Error Handler
